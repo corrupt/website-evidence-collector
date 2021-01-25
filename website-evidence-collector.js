@@ -48,7 +48,8 @@ let uri_refs_stripped = uri_refs.map((uri_ref) => {
 
 var refs_regexp = new RegExp(`^(${uri_refs_stripped.join('|')})\\b`, 'i');
 
-(async() => {
+
+run = async (argv) => {
   if (argv.output) {
     if (fs.existsSync(argv.output)) {
       if (fs.readdirSync(argv.output).length > 0) {
@@ -664,4 +665,10 @@ var refs_regexp = new RegExp(`^(${uri_refs_stripped.join('|')})\\b`, 'i');
       fs.writeFileSync(path.join(argv.output, 'inspection.html'), html_dump);
     }
   }
-})();
+
+  return output;
+}
+
+run(argv);
+
+module.exports = run
