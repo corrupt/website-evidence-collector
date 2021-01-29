@@ -57,11 +57,14 @@ const wec = require('./website-evidence-collector')
  * @returns Promise resolving to WEC's output object. If any exception is thrown during WEC
  *          execution, it will reject with that exception's error message
  */
-module.exports = async (opts) => {
-    // The defaults I'm overwriting here are entirely driven by the idea for WEC to be run from code
-    // in the background, hence all output to stdout is suppressed.
-    // Output can still be set if so required.
-    const argv = Object.assign({
+
+const WEC = function(opts) {
+    /**
+     * The defaults I'm overwriting here are entirely driven by the idea for WEC to be run from code
+     * in the background, hence all output to stdout is suppressed.
+     * Output can still be set if so required.
+     */
+    this.argv = Object.assign({
         max: 0,
         sleep: 3000,
         firstPartyUri: [],
@@ -80,21 +83,23 @@ module.exports = async (opts) => {
         json: false,
         html: false,
     });
+}
 
-    if (opts.testssl && opts.testsslFile) {
-        return Promise.reject('opts.testssl and opts.testsslFile cannot be set at the same time');
-    }
-    if (opts.testsslExecutable && opts.testsslFile) {
-        return Promise.reject('opts.testsslExecutable and opts.testsslFile cannot be set at the same time');
-    }
-
-    return new Promise((resolve, reject) => {
-        try {
-            const output = wec(argv);
-            resolve(output);
-        } catch (err) {
-            reject(err);
+WEC.prototype = {
+    run: async(browseURL=null){
+        if (browseURL) {
+            this.argv.browseURL = browseURL
         }
 
-    });
+        return new Promise((resolve, reject) => {
+            try {
+                const output = wec(this.argv);
+                resolve(output);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 }
+
+module.exports = WEC
