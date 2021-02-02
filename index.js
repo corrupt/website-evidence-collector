@@ -86,7 +86,7 @@ const WEC = function(opts) {
 }
 
 WEC.prototype = {
-    run: async(browseURL=null){
+    run: async function(browseURL=null){
         if (browseURL) {
             this.argv.browseURL = browseURL
         }

@@ -8,10 +8,6 @@
  * @license EUPL-1.2
  */
 
-if (require.main !== module) {
-  const argv = require('./lib/argv');
-}
-
 const UserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3617.0 Safari/537.36";
 const WindowSize = {
   width: 1680,
@@ -36,22 +32,21 @@ const sampleSize = require('lodash/sampleSize');
 const uniqWith = require('lodash/uniqWith');
 const pickBy = require('lodash/pickBy');
 
-const { isFirstParty, getLocalStorage, safeJSONParse } = require('./lib/tools');
-
-const uri_ins = argv._[0];
-const uri_ins_host = url.parse(uri_ins).hostname; // hostname does not include port unlike host
-
-var uri_refs = [uri_ins].concat(argv.firstPartyUri);
-
-let uri_refs_stripped = uri_refs.map((uri_ref) => {
-  let uri_ref_parsed = url.parse(uri_ref);
-  return escapeRegExp(`${uri_ref_parsed.hostname}${uri_ref_parsed.pathname.replace(/\/$/, "")}`);
-});
-
-var refs_regexp = new RegExp(`^(${uri_refs_stripped.join('|')})\\b`, 'i');
 
 
-run = async (argv) => {
+const run = async function(argv) {
+
+  const uri_ins = argv._[0];
+  const uri_ins_host = url.parse(uri_ins).hostname; // hostname does not include port unlike host
+  var uri_refs = [uri_ins].concat(argv.firstPartyUri);
+
+  let uri_refs_stripped = uri_refs.map((uri_ref) => {
+    let uri_ref_parsed = url.parse(uri_ref);
+    return escapeRegExp(`${uri_ref_parsed.hostname}${uri_ref_parsed.pathname.replace(/\/$/, "")}`);
+  });
+
+  var refs_regexp = new RegExp(`^(${uri_refs_stripped.join('|')})\\b`, 'i');
+
   if (argv.output) {
     if (fs.existsSync(argv.output)) {
       if (fs.readdirSync(argv.output).length > 0) {
@@ -68,11 +63,12 @@ run = async (argv) => {
   }
 
   // logger involves file access and should initate after overwrite check
-  const logger = require('./lib/logger');
-  const { setup_cookie_recording } = require('./lib/setup-cookie-recording');
-  const { setup_beacon_recording } = require('./lib/setup-beacon-recording');
-  const { setup_websocket_recording } = require('./lib/setup-websocket-recording');
-  const { set_cookies } = require('./lib/set-cookies');
+  const logger = require('./lib/logger')(argv.output, argv.quiet);
+  const { isFirstParty, getLocalStorage, safeJSONParse } = require('./lib/tools')(logger);
+  const { setup_cookie_recording } = require('./lib/setup-cookie-recording')(logger);
+  const { setup_beacon_recording } = require('./lib/setup-beacon-recording')(logger);
+  const { setup_websocket_recording } = require('./lib/setup-websocket-recording')(logger);
+  const { set_cookies } = require('./lib/set-cookies')(logger, argv);
 
   const browser = await puppeteer.launch({
     headless: argv.headless,
@@ -672,6 +668,7 @@ run = async (argv) => {
 }
 
 if (require.main === module)  {
+  const argv = require('./lib/argv');
   run(argv);
 }
 
