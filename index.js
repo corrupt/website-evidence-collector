@@ -77,6 +77,7 @@ const WEC = function(opts) {
         browserOptions: [],
         lang: 'en',
         pageTimeout: 0,
+        browseURLs: []
     }, opts, {
         quiet: true,
         yaml: false,
@@ -86,9 +87,17 @@ const WEC = function(opts) {
 }
 
 WEC.prototype = {
-    run: async function(browseURL=null){
-        if (browseURL) {
-            this.argv.browseURL = browseURL
+    /**
+     *
+     * @param {string[]} browseURLs URLs to browse
+     */
+    run: async function(browseURLs=[]){
+        if (browseURLs) {
+            this.argv._ = browseURLs
+        } else if (this.argv.browseURLs && this.argv.browseURLs !== []){
+            this.argv._ = this.argv.browseURLs
+        } else {
+            throw new Error("No browse URL was provided")
         }
 
         return new Promise((resolve, reject) => {
